@@ -40,6 +40,9 @@ public:
   void putch(char ch);
   void write(const char *c);
   void write_dec(int n);
+  void cputch(char ch, u8int bg, u8int fg);
+  void cwrite(const char *c, u8int bg, u8int fg);
+  void cwrite_dec(int n, u8int bg, u8int fg);
 
   bool isinit()
   {
@@ -65,6 +68,12 @@ void putch(char ch);
 void print_dec(u32int n);
 //Clear the Screen
 void clrscr();
+
+//Print to the screen
+void cprintj(const char *s, u8int bg, u8int fg);
+void cputch(char ch, u8int bg, u8int fg);
+//Print a Number
+void cprint_dec(u32int n, u8int bg, u8int fg);
 
 
 #endif

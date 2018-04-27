@@ -19,7 +19,7 @@ void init_timer(u32int freq)
   printj("Initializing Timer......");
   if(freq == 0)
   {
-    printj("DISABLED\n");
+    cprintj("DISABLED\n",RED,WHITE);
 	return;
   }
  // Raise the Interrupt to Initialise the Clock

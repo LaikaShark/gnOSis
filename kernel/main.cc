@@ -21,9 +21,14 @@ int kmain(struct multiboot *mboot_ptr)
   // All device Intialisations Go Here
   init_keyboard_driver();
   init_timer(0); //disable unused timer
-  printj("                Version 0.3.03\n");
-  printj("================[System Ready]================\n");
+  printj("Color test:");
+  for(int i=0; i < 16; i++)
+  {
+  	cprintj(" ",i,WHITE);
+  }
 
+  printj("\n                Version 0.3.03\n");
+  printj("================[System Ready]================\n");
   char c = 0;
   char p[2];
   p[0] = 0;

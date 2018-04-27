@@ -61,7 +61,7 @@ void monitor::scroll()
 void monitor::putch(char ch)
 {
   // Setup the bg and fg color
-  u8int attribute =( BLACK << 4) |(WHITE & 0x0f);
+  u8int attribute =( BLACK << 4) |(LIGHT_GREY & 0x0f);
 
   // Handle a backspace, by moving the cursor back one space
   if (ch == 0x08 && cursor_x)
@@ -172,6 +172,103 @@ void monitor::write_dec(int n)
   write(c2);
 }
 
+
+//write colored dec to the console
+void monitor::cwrite_dec(int n, u8int bg, u8int fg)
+{
+
+  if (n == 0)
+    {
+      cputch('0', bg, fg);
+      return;
+    }
+
+  s32int acc = n;
+  char c[32];
+  int i = 0;
+  while (acc > 0)
+    {
+      c[i] = '0' + acc%10;
+      acc /= 10;
+      i++;
+    }
+  c[i] = 0;
+
+  char c2[32];
+  c2[i--] = 0;
+  int j = 0;
+  while(i >= 0)
+    {
+      c2[i--] = c[j++];
+    }
+  cwrite(c2, bg, fg);
+}
+
+//Print a colored string
+void monitor::cwrite(const char *c, u8int bg, u8int fg)
+{
+  int i = 0;
+
+  while (c[i])
+    {
+      cputch(c[i++], bg, fg);
+    }
+}
+
+//Print a colored character
+void monitor::cputch(char ch, u8int bg, u8int fg)
+{
+  // Setup the bg and fg color
+  u8int attribute =( bg << 4) |(fg & 0x0f);
+
+  // Handle a backspace, by moving the cursor back one space
+  if (ch == 0x08 && cursor_x)
+    {
+      cursor_x--;
+    }
+
+  // Handle a tab by increasing the cursor's X, but only to a point
+  // where it is divisible by 8.
+  else if (ch == 0x09)
+    {
+      cursor_x = (cursor_x+8) & ~(8-1);
+    }
+
+  // Handle carriage return
+  else if (ch == '\r')
+    {
+      cursor_x = 0;
+    }
+
+  // Handle newline by moving cursor back to left and increasing the row
+  else if (ch == '\n')
+    {
+      cursor_x = 0;
+      cursor_y++;
+    }
+
+  // IF all the above text fails , print the Character
+  if (ch >= ' ')
+    {
+      // Calculate the Address of the Cursor Position
+      u16int *location = video_memory + (cursor_y * 80 + cursor_x);
+      // Write the Bit into the cursor Postition
+      *location = ch | (attribute << 8);
+      cursor_x++;
+    }
+
+  // IF after all the printing we need to insert a new line
+  if (cursor_x >= 80)
+    {
+      cursor_x = 0;
+      cursor_y++;
+    }
+
+  // Scroll , or move the Cursor If Needed
+  scroll();
+  movecursor();
+}
+
 //Print a Message on to the screen the simple way
 // A monitor object is created globally
 monitor mtr;
@@ -204,4 +301,29 @@ void clrscr()
 {
   mtr.init();
   mtr.clear();
+}
+
+void cprintj(const char *s, u8int bg, u8int fg)
+{
+  if (mtr.isinit() == false)
+    mtr.init();
+  mtr.cwrite(s, bg, fg);
+}
+
+void cputch(char ch, u8int bg, u8int fg)
+{
+  if (mtr.isinit() == false)
+    mtr.init();
+  mtr.cputch(ch, bg, fg);
+}
+
+//Print a Number on to the Screen
+void cprint_dec(u32int n, u8int bg, u8int fg)
+{
+  if( mtr.isinit() == false)
+    {
+      mtr.init();
+    }
+
+  mtr.cwrite_dec(n, bg, fg);
 }
