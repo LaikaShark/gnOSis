@@ -34,10 +34,20 @@ int kmain(struct multiboot *mboot_ptr)
   while(true)
   {
 	linein = keyboard_readline();
-	if(str_eq(linein, "halt"))
+	if(str_eq(linein, (char*)"halt"))
 	{
-		printj("HALTING...");
+		clrscr();
+		//TODO Add system cleanup here
+		//     and move to deboot function
+		printj("IT IS SAFE TO POWER OFF");
 		return 1;
+	}
+	else if(str_eq((char*)"hello",linein))
+	{
+		for(int i=0; i<5; i++)
+		{
+			printj("HI!\n");
+		}
 	}
   }
 
