@@ -28,7 +28,7 @@ gnOSis.bin: $(ASOBJECTS) $(CXXOBJECTS)
 
 #run the kernel
 run: gnOSis.bin
-	qemu-system-i386 -kernel 'build/gnOSis.bin'
+	qemu-system-i386 -kernel 'build/gnOSis.bin' 
 
 #Assembly -> object files
 %.s.o: %.s
