@@ -3,12 +3,12 @@
 bool str_eq(char* a, char* b)
 {
 	int i = 0;
+	if(a[i] == '\0' && b[i] != '\0')
+	{
+		return false;
+	}
 	while(a[i] != '\0')
 	{
-		print_dec(a[i]);
-		putch('\t');
-		print_dec(b[i]);
-		putch('\n');
 		if(a[i] != b[i])
 		{
 			return false;
