@@ -197,3 +197,29 @@ void keyboard_handler(registers_t regs)
         }
     }
 }
+//Global so we can pass it around
+char linebuff[1024];
+//Reads in line and stores it in linebuff
+char* keyboard_readline()
+{
+	char cur = 0;
+	int len = 0;
+	for(int i=0; i<1024;i++) {linebuff[i] = 0;}
+    while(cur != '\n')
+	{
+		cur = keyboard_getchar();
+		putch(cur);
+		if(cur == '\b')
+		{
+			putch(' ');
+			putch('\b');
+			linebuff[--len] = 0;
+		}
+		else if(cur != '\0')
+		{
+			linebuff[len++] = cur;
+		}
+	}
+	linebuff[--len] = 0;
+    return linebuff;
+}

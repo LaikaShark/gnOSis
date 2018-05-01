@@ -13,7 +13,7 @@
 #define SCROLLLOCK 0x40
 #define NUMLOCK 0x80
 #define RELEASED_MASK 0x80
-
+#define LINE_BUFF_SIZE 1024
 /*
  * 8 Bits for control key statuses (1 = set, 0 = not set):
  *
@@ -48,5 +48,5 @@ void keyboard_handler(registers_t regs);
 // Returns a character from the keyboard; does not block.
 // Returns '\0' if no character is available.
 char keyboard_getchar();
-
+char* keyboard_readline();
 #endif

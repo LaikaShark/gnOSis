@@ -29,18 +29,16 @@ int kmain(struct multiboot *mboot_ptr)
 
   printj("\n                Version 0.3.03\n");
   printj("================[System Ready]================\n");
-  char c = 0;
-  char p[2];
-  p[0] = 0;
-  p[1] = 0;
+
+  char* linein;
   while(true)
   {
-    c = keyboard_getchar();
-    if(c != 0)
-    {
-  	  p[0] = c;
-	  printj(p);
-    }
+	linein = keyboard_readline();
+	if(str_eq(linein, "halt"))
+	{
+		printj("HALTING...");
+		return 1;
+	}
   }
 
   return 1;

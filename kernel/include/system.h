@@ -19,6 +19,5 @@ typedef          char  s8int;
 #include "timer.h"
 #include "common.h"
 #include "keyboard.h"
-#include "datastruct.h"
-
+#include "string.h"
 #endif
