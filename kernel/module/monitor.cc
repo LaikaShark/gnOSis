@@ -150,7 +150,11 @@ void monitor::write_dec(int n)
       putch('0');
       return;
     }
-
+  if(n < 0)
+  {
+	putch('-');
+	n *= -1;
+  }
   s32int acc = n;
   char c[32];
   int i = 0;
@@ -182,7 +186,11 @@ void monitor::cwrite_dec(int n, u8int bg, u8int fg)
       cputch('0', bg, fg);
       return;
     }
-
+  if(n < 0)
+  {
+	cputch('-', bg, fg);
+	n *= -1;
+  }
   s32int acc = n;
   char c[32];
   int i = 0;

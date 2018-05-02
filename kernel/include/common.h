@@ -12,5 +12,6 @@ void boot_text();
 void init_funclib();
 void reg_function(void (*func)());
 void hello();
+void hello2();
 void call_function(int in);
 #endif

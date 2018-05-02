@@ -44,9 +44,16 @@ int kmain(struct multiboot *mboot_ptr)
 		printj("IT IS SAFE TO POWER OFF");
 		return 1;
 	}
-	else if(str_eq((char*)"func",linein))
+	else if(str_eq(linein, (char*)"func"))
 	{
-		call_function(0);
+		printj("Function to load: ");
+		call_function(str_to_int(keyboard_readline()));
+	}
+	else if(str_eq(linein, (char*)"test"))
+	{
+		cprintj("TESTING EXPERIMENTAL FUNCTIONALITY\n", BLACK, RED);
+		cprint_dec(str_to_int(keyboard_readline()),BROWN,LIGHT_BROWN);
+		putch('\n');
 	}
   }
 
