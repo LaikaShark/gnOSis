@@ -17,3 +17,15 @@ bool str_eq(char* a, char* b)
 	}
 	return true;
 }
+
+int str_len(char* in)
+{
+	int i = 0;
+	while(in[i] != '\0') {i++;}
+	return i;
+}
+
+char** str_split(char* in, char delim, int* numtokens)
+{
+	
+}

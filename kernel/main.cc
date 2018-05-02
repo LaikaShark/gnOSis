@@ -20,6 +20,7 @@ int kmain(struct multiboot *mboot_ptr)
 
   // All device Intialisations Go Here
   init_keyboard_driver();
+  init_funclib();
   init_timer(0); //disable unused timer
   printj("Color test:");
   for(int i=0; i < 16; i++)
@@ -33,6 +34,7 @@ int kmain(struct multiboot *mboot_ptr)
   char* linein;
   while(true)
   {
+  	putch('>');
 	linein = keyboard_readline();
 	if(str_eq(linein, (char*)"halt"))
 	{
@@ -42,12 +44,9 @@ int kmain(struct multiboot *mboot_ptr)
 		printj("IT IS SAFE TO POWER OFF");
 		return 1;
 	}
-	else if(str_eq((char*)"hello",linein))
+	else if(str_eq((char*)"func",linein))
 	{
-		for(int i=0; i<5; i++)
-		{
-			printj("HI!\n");
-		}
+		call_function(0);
 	}
   }
 
