@@ -105,9 +105,14 @@ char* get_split(char* s, char delim, int split)
 	static char ret[1024] = {0};
 	int split_start = 0;
 	int split_end = 0;
+	int split_c = 0;
 	if(split > count_splits(s, delim))
 	{
 		return ret;	
+	}
+	while(s[split_c] != '\0')
+	{
+		
 	}
 	printj("Ok");
 	return ret;
