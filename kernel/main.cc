@@ -52,7 +52,7 @@ int kmain(struct multiboot *mboot_ptr)
 	else if(str_eq(linein, (char*)"test"))
 	{
 		cprintj("TESTING EXPERIMENTAL FUNCTIONALITY\n", BLACK, RED);
-		cprint_dec(str_to_int(keyboard_readline()),BROWN,LIGHT_BROWN);
+		printj(get_split(keyboard_readline(),' ',3));
 		putch('\n');
 	}
   }

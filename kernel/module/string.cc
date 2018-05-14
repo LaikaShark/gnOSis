@@ -85,7 +85,30 @@ int str_to_int(char* s)
 	return result;
 }
 
-char** str_split(char* in, char delim, int* numtokens)
+int count_splits(char* s, char delim)
 {
-	
+	int segments = 1;
+	int i = 0;
+	while(s[i] != '\0')
+	{
+		if(s[i] == delim)
+		{
+			segments++;
+		}
+		i++;
+	}
+	return segments;
+}
+
+char* get_split(char* s, char delim, int split)
+{
+	static char ret[1024] = {0};
+	int split_start = 0;
+	int split_end = 0;
+	if(split > count_splits(s, delim))
+	{
+		return ret;	
+	}
+	printj("Ok");
+	return ret;
 }
