@@ -103,16 +103,26 @@ int count_splits(char* s, char delim)
 char* get_split(char* s, char delim, int split)
 {
 	static char ret[1024] = {0};
-	int split_start = 0;
-	int split_end = 0;
-	int split_c = 0;
+	int split_c = 1;
+	int i = 0;
+	int j = 0;
 	if(split > count_splits(s, delim))
 	{
 		return ret;	
 	}
-	while(s[split_c] != '\0')
+	while(s[i] != '\0' && split_c != split)
 	{
-		
+		if(s[i] == delim)
+		{
+			split_c++;
+		}
+		i++;
+	}
+	while(s[i] != '\0' && s[i] != delim)
+	{
+		ret[j] = s[i];
+		i++;
+		j++;
 	}
 	printj("Ok");
 	return ret;
