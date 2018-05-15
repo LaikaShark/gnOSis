@@ -124,6 +124,5 @@ char* get_split(char* s, char delim, int split)
 		i++;
 		j++;
 	}
-	printj("Ok");
 	return ret;
 }
