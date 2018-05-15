@@ -103,6 +103,7 @@ int count_splits(char* s, char delim)
 char* get_split(char* s, char delim, int split)
 {
 	static char ret[1024] = {0};
+	for(int l = 0; l < 1024; l++) {ret[l] = 0;}
 	int split_c = 1;
 	int i = 0;
 	int j = 0;
