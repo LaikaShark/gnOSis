@@ -36,7 +36,7 @@ int kmain(struct multiboot *mboot_ptr)
   {
   	putch('>');
 	linein = keyboard_readline();
-	if(str_eq(linein, (char*)"halt"))
+	if(str_eq(get_split(linein, ' ', 1), (char*)"halt"))
 	{
 		clrscr();
 		//TODO Add system cleanup here
@@ -44,10 +44,20 @@ int kmain(struct multiboot *mboot_ptr)
 		printj("IT IS SAFE TO POWER OFF");
 		return 1;
 	}
-	else if(str_eq(linein, (char*)"func"))
+	if(str_eq(get_split(linein, ' ', 1), (char*)"clear"))
 	{
-		printj("Function to load: ");
-		call_function(str_to_int(keyboard_readline()));
+		clrscr();
+	}
+	else if(str_eq(get_split(linein, ' ', 1), (char*)"func"))
+	{
+		if(count_splits(linein, ' ') == 2)
+		{
+			call_function(str_to_int(get_split(linein, ' ', 2)));
+		}
+		else
+		{
+			printj("Usage: func [int]\n");
+		}
 	}
 	else if(str_eq(linein, (char*)"test"))
 	{
