@@ -62,8 +62,13 @@ int kmain(struct multiboot *mboot_ptr)
 	else if(str_eq(linein, (char*)"test"))
 	{
 		cprintj("TESTING EXPERIMENTAL FUNCTIONALITY\n", BLACK, RED);
+		printj("returns third slice of input > ");
 		printj(get_split(keyboard_readline(),' ',3));
 		putch('\n');
+	}
+	else if(str_eq(linein, (char*)"files"))
+	{
+		//dummy to list files
 	}
   }
 
