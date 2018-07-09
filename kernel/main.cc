@@ -48,17 +48,6 @@ int kmain(struct multiboot *mboot_ptr)
 	{
 		clrscr();
 	}
-	else if(str_eq(get_split(linein, ' ', 1), (char*)"func"))
-	{
-		if(count_splits(linein, ' ') == 2)
-		{
-			call_function(str_to_int(get_split(linein, ' ', 2)));
-		}
-		else
-		{
-			printj("Usage: func [int]\n");
-		}
-	}
 	else if(str_eq(linein, (char*)"test"))
 	{
 		cprintj("TESTING EXPERIMENTAL FUNCTIONALITY\n", BLACK, RED);

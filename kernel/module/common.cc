@@ -18,7 +18,7 @@ void boot_text()
   printj(" ######  ##   ####  ######  ####### ## #######\n");
   printj("\n");
 }
-
+/* while this is cool, it's useless and dangerous
 func_ptr func_lib[256] = {0};
 void init_funclib()
 {
@@ -62,3 +62,4 @@ void call_function(int in)
 	cprintj("]\n",BLACK,BROWN);
 	func_lib[in]();
 }
+*/
