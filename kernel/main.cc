@@ -38,37 +38,26 @@ int kmain(struct multiboot *mboot_ptr)
 		clrscr();
 		//TODO Add system cleanup here
 		//     and move to deboot function
-		printj("IT IS SAFE TO POWER OFF");
+		printj("\nIT IS SAFE TO POWER OFF");
 		return 1;
 	}
 	if(str_eq(get_split(linein, ' ', 1), (char*)"clear"))
 	{
 		clrscr();
 	}
-	else if(str_eq(linein, (char*)"test"))
+	else if(str_eq(get_split(linein,' ',1), (char*)"test"))
 	{
 		cprintj("TESTING EXPERIMENTAL FUNCTIONALITY\n", BLACK, RED);
-		printj("testing files\n");
-		init_FT();
-		new_file((char*)"test");
-
-		open_file((char*)"test");
-		printj(filebuff);
-		
-		str_cpy(filebuff, (char*)"new data\n");
-		printj(filebuff);
-		
-		write_file((char*)"test");
-		str_cpy(filebuff, (char*)"#########");
-
-		open_file((char*)"test");
-		printj(filebuff);
-		
-		putch('\n');
+		printj("NO TEST\n");
 	}
-	else if(str_eq(linein, (char*)"files"))
+	else if(str_eq(get_split(linein,' ',1), (char*)"help")
+			|| str_eq(get_split(linein, ' ',1),(char*)"h"))
 	{
-		//dummy to list files
+		printj("Commands:\n");
+		printj("test  -- whatever the current test function is\n");
+		printj("clear -- clear the screen\n");
+		printj("halt  -- stop the OS\n");
+		printj("h/help-- this text, dummy\n");
 	}
   }
 

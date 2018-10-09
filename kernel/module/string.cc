@@ -26,6 +26,10 @@ bool str_eq(char* a, char* b)
 		}
 	i++;
 	}
+	if(a[i] != b[i])
+	{
+		return false;
+	};
 	return true;
 }
 
