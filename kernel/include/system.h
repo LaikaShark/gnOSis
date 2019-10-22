@@ -20,4 +20,5 @@ typedef          char  s8int;
 #include "common.h"
 #include "keyboard.h"
 #include "string.h"
+#include "forth.h"
 #endif
