@@ -29,7 +29,7 @@ typedef unsigned char byte;
 #define STACK_POSITION (STATE_POSITION + CELL_SIZE)
 #define RSTACK_POSITION (STACK_POSITION + STACK_SIZE * CELL_SIZE)
 #define HERE_START (RSTACK_POSITION + RSTACK_SIZE * CELL_SIZE)
-#define MAX_BUILTIN_ID 71
+#define MAX_BUILTIN_ID 75
 
 //FLAGS AND MASK
 #define FLAG_IMMEDIATE 0x80
@@ -58,7 +58,7 @@ cell lastIp;
 cell quit_address;
 cell commandAddress;
 cell maxBuiltinAddress;
-
+bool boot = false;
 //INPUT BUFFER
 char lineBuffer[128];
 int charsInLineBuffer = 0;
@@ -108,7 +108,7 @@ const char *initScript =
 ": D2/ 2. D/ ;\n"
 ": +! DUP @ ROT + SWAP ! ;\n"
 ": [COMPILE] WORD FIND >CFA , ; IMMEDIATE\n"
-": [CHAR] key ' LIT , , ; IMMEDIATE\n"
+": [CHAR] BUFFKEY ' LIT , , ; IMMEDIATE\n"
 ": RECURSE LATEST @ >CFA , ; IMMEDIATE\n"
 ": DOCOL 0 ;\n"
 ": CONSTANT CREATE DOCOL , ' LIT , , ' EXIT , ;\n"
@@ -132,7 +132,7 @@ const char *initScript =
 ": ABS DUP 0< IF NEGATE THEN ;\n"
 ": DABS 2DUP 0. D< IF DNEGATE THEN ;\n"
 ": .DIGIT DUP 9 > IF 55 ELSE 48 THEN + EMIT ;\n"
-    ": .SIGN DUP 0< IF 45 EMIT NEGATE THEN ;\n" /* BUG: 10000000000... will be shown wrong */
+": .SIGN DUP 0< IF 45 EMIT NEGATE THEN ;\n" /* BUG: 10000000000... will be shown wrong */
 ": .POS BASE @ /MOD ?DUP IF RECURSE THEN .DIGIT ;\n"
 ": . .SIGN DUP IF .POS ELSE .DIGIT THEN ;\n"
 ": COUNTPOS SWAP 1 + SWAP BASE @ / ?DUP IF RECURSE THEN ;\n"
@@ -143,9 +143,9 @@ const char *initScript =
 ": .S DSP@ BEGIN DUP S0@ > WHILE DUP ? CELL - REPEAT DROP ;\n"
 ": TYPE 0 DO DUP C@ EMIT 1 + LOOP DROP ;\n"
 ": ALIGN BEGIN HERE @ CELL MOD WHILE 0 C, REPEAT ;\n"
-": s\" ' LITSTRING , HERE @ 0 , BEGIN KEY DUP 34 <> WHILE C, REPEAT DROP DUP HERE @ SWAP - CELL - SWAP ! ALIGN ; IMMEDIATE\n"
+": s\" ' LITSTRING , HERE @ 0 , BEGIN BUFFKEY DUP 34 <> WHILE C, REPEAT DROP DUP HERE @ SWAP - CELL - SWAP ! ALIGN ; IMMEDIATE\n"
 ": .\" [COMPILE] s\" ' TYPE , ; IMMEDIATE\n"
-": ( BEGIN KEY [CHAR] ) = UNTIL ; IMMEDIATE\n"
+": ( BEGIN BUFFKEY [CHAR] ) = UNTIL ; IMMEDIATE\n"
 ": COUNT DUP 1+ SWAP C@ ;\n"
 ": MIN 2DUP < IF DROP ELSE NIP THEN ;\n"
 ": MAX 2DUP > IF DROP ELSE NIP THEN ;\n"
@@ -158,17 +158,17 @@ const char *initScript =
 //IO WRAPPERS
 /////////////////////////////////////////////////////////////////////
 
-//write wrapper
-void putkey(char c)
-{
-  putch(c);
-}
-
-//read wrapper
+//if there's init left, pretend some one is typing it;
+//otherwise some one is typing it
 int llkey()
 {
+  int c;
   if(*initscript_pos) return *(initscript_pos)++;
-  return keyboard_getchar();
+  do
+  {
+    c = keyboard_getchar();
+  }while(c == '\0');
+  return c;
 }
 
 //buffer empty?
@@ -177,30 +177,61 @@ int keyWaiting()
   return positionInLineBuffer < charsInLineBuffer ? -1 : 0;
 }
 
-//line buffered input
-int getkey()
+//line buffeLIGHT_RED input
+int getkey(bool noReturn)
 {
-  int c;
-  if(keyWaiting())
-    return lineBuffer[positionInLineBuffer++];
+    int c;
 
-  charsInLineBuffer = 0;
-  while((c = llkey()) != EOF)
-  {
-    if (charsInLineBuffer == sizeof(lineBuffer))
-      break;
-    if (c == '\n')
-      break;
-  }
-  positionInLineBuffer = 1;
-  return lineBuffer[0];
+    if (keyWaiting())
+        return lineBuffer[positionInLineBuffer++];
+
+    charsInLineBuffer = 0;
+    while ((c = llkey()) != EOF)
+    {
+        if (charsInLineBuffer == sizeof(lineBuffer)) break;
+        if(c == '\b')
+        {
+          putch('\b');
+          putch(' ');
+          putch('\b');
+          charsInLineBuffer--;
+          if(charsInLineBuffer < 0)
+          {
+            charsInLineBuffer = 0;
+          }
+        }
+        else
+        {
+          if(!(*initscript_pos))
+          {
+            if(c == '\n' && noReturn)
+              putch(' ');
+            else
+              putch(c);
+          }
+          lineBuffer[charsInLineBuffer++] = c;
+        }
+        if (c == '\n')
+        {
+          break;
+        }
+    }
+
+    positionInLineBuffer = 1;
+    return lineBuffer[0];
 }
 
 //string wrapper
 void tell(const char *str)
 {
   while(*str)
-    putkey(*str++);
+    putch(*str++);
+}
+
+void tell(const char *str, u8int col)
+{
+  while(*str)
+    cputch(*str++, BLACK, col);
 }
 /////////////////////////////////////////////////////////////////////
 //STACK OPERATIONS, NON RETURN
@@ -209,7 +240,7 @@ cell pop()
 {
   if(*sp == 1)
   {
-    tell("? Stack underflow\n");
+    tell("? Stack underflow\n", LIGHT_RED);
     errorFlag = 1;
     return 0;
   }
@@ -220,7 +251,7 @@ cell tos()
 {
   if(*sp == 1)
   {
-    tell("? Stack underflow\n");
+    tell("? Stack underflow\n", LIGHT_RED);
     errorFlag = 1;
     return 0;
   }
@@ -231,7 +262,7 @@ void push(cell data)
 {
   if(*sp >= STACK_SIZE)
   {
-    tell("? Stack overflow\n");
+    tell("? Stack overflow\n", LIGHT_RED);
     errorFlag = 1;
     return;
   }
@@ -261,7 +292,7 @@ cell rpop()
 {
   if (*rsp == 1)
   {
-    tell("? RStack underflow\n");
+    tell("? RStack underflow\n", LIGHT_RED);
     errorFlag = 1;
     return 0;
   }
@@ -272,7 +303,7 @@ void rpush(cell data)
 {
   if (*rsp >= RSTACK_SIZE)
   {
-    tell("? RStack overflow\n");
+    tell("? RStack overflow\n", LIGHT_RED);
     errorFlag = 1;
     return;
   }
@@ -286,7 +317,7 @@ cell readMem(cell address)
 {
   if (address > MEM_SIZE)
   {
-    tell("Internal error in readMem: Invalid addres\n");
+    tell("Internal error in readMem: Invalid addres\n", LIGHT_RED);
     errorFlag = 1;
     return 0;
   }
@@ -297,7 +328,7 @@ void writeMem(cell address, cell value)
 {
   if (address > MEM_SIZE)
   {
-    tell("Internal error in writeMem: Invalid address\n");
+    tell("Internal error in writeMem: Invalid address\n", LIGHT_RED);
     errorFlag = 1;
     return;
   }
@@ -311,13 +342,13 @@ byte readWord()
     byte len = 0;
     int c;
 
-    while ((c = getkey()) != EOF)
+    while ((c = getkey(true)) != EOF)
     {
         if (c == ' ') continue;
         if (c == '\n') continue;
         if (c != '\\') break;
 
-        while ((c = getkey()) != EOF)
+        while ((c = getkey(true)) != EOF)
             if (c == '\n')
                 break;
     }
@@ -327,7 +358,7 @@ byte readWord()
         if (len >= (INPUT_LINE_SIZE - 1))
             break;
         line[++len] = c;
-        c = getkey();
+        c = getkey(true);
     }
     line[0] = len;
     return len;
@@ -430,8 +461,8 @@ BUILTIN(0, "RUNDOCOL", docol, 0)
 BUILTIN( 1, "CELL",      doCellSize,      0)              { push(CELL_SIZE); }
 BUILTIN( 2, "@",         memRead,         0)              { push(readMem(pop())); }
 BUILTIN( 3, "C@",        memReadByte,     0)              { push(memory[pop()]); }
-BUILTIN( 4, "KEY",       key,             0)              { push(getkey()); }
-BUILTIN( 5, "EMIT",      emit,            0)              { putkey(pop() & 255); }
+BUILTIN( 4, "BUFFKEY",   buffkey,         0)              { push(getkey(false));}
+BUILTIN( 5, "EMIT",      emit,            0)              { cputch((pop() & 255), BLACK, WHITE); }
 BUILTIN( 6, "DROP",      drop,            0)              { pop(); }
 BUILTIN( 7, "EXIT",      doExit,          0)              { next = rpop(); }
 BUILTIN( 8, "BYE",       bye,             0)              { exitReq = 1; }
@@ -606,10 +637,10 @@ BUILTIN(38, "QUIT", quit, 0)
             parseNumber(&memory[1], memory[0], &number, &notRead, &isDouble);
             if (notRead)
             {
-                tell("Unknown word: ");
+                tell("Unknown word: ", LIGHT_RED);
                 for (i=0; i<memory[0]; i++)
-                    putkey(memory[i+1]);
-                putkey('\n');
+                    cputch(memory[i+1], BLACK, WHITE);
+                putch('\n');
 
                 *sp = *rsp = 1;
                 continue;
@@ -647,7 +678,15 @@ BUILTIN(38, "QUIT", quit, 0)
         if (errorFlag)
             *sp = *rsp = 1;
         else if (!keyWaiting() && !(*initscript_pos))
-            tell(" OK\n");
+        {
+            if(boot)
+              tell(" OK\n", WHITE);
+            else
+            {
+              putch('\b');
+              boot = true;
+            }
+        }
     }
 }
 
@@ -818,7 +857,7 @@ BUILTIN(58, "*/", timesDivide, 0)
     push((cell)r);
     if ((cell)r != r)
     {
-        tell("Arithmetic overflow\n");
+        tell("Arithmetic overflow\n", LIGHT_RED);
         errorFlag = 1;
     }
 }
@@ -834,7 +873,7 @@ BUILTIN(59, "*/MOD", timesDivideMod, 0)
     push((cell)r);
     if ((cell)r != r)
     {
-        tell("Arithmetic overflow\n");
+        tell("Arithmetic overflow\n", LIGHT_RED);
         errorFlag = 1;
     }
 }
@@ -922,6 +961,36 @@ BUILTIN(70, "2ROT", drot, 0)
     dpush(c);
 }
 
+BUILTIN(71, "CLEAR", clear, 0)
+{
+    clrscr();
+}
+
+BUILTIN(72 ,"CEMIT", cemit, 0)
+{ 
+  int bg = pop();
+  int fg = pop();
+  char ch = pop() & 255;
+
+  cputch(ch,fg,bg); 
+}
+
+BUILTIN(73 ,"TEST", test, 0)
+{ 
+  set_timer(1,&timer_callback);
+}
+
+BUILTIN( 74, "KEY", key, 0)
+{
+  char c;
+  do
+  {
+    c = keyboard_getchar();
+  }while(c == '\0');
+  push(c);
+}
+
+
 /*******************************************************************************
 *
 * Loose ends
@@ -965,18 +1034,18 @@ void addBuiltin(cell code, const char* name, const byte flags, builtin f)
 
     if (code >= MAX_BUILTIN_ID)
     {
-        tell("Error adding builtin ");
+        tell("Error adding builtin ", LIGHT_RED);
         tell(name);
-        tell(": Out of builtin IDs\n");
+        tell(": Out of builtin IDs\n", LIGHT_RED);
         errorFlag = 1;
         return;
     }
 
     if (builtins[code] != 0)
     {
-        tell("Error adding builtin ");
+        tell("Error adding builtin ", LIGHT_RED);
         tell(name);
-        tell(": ID given twice\n");
+        tell(": ID given twice\n", LIGHT_RED);
         errorFlag = 1;
         return;
     }
@@ -1087,6 +1156,11 @@ int forth()
     ADD_BUILTIN(dswap);
     ADD_BUILTIN(dover);
     ADD_BUILTIN(drot);
+
+    ADD_BUILTIN(clear);
+    ADD_BUILTIN(cemit);
+    ADD_BUILTIN(test);
+    ADD_BUILTIN(buffkey);
 
     maxBuiltinAddress = (*here) - 1;
 

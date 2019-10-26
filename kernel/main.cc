@@ -25,44 +25,13 @@ int kmain(struct multiboot *mboot_ptr)
     cprintj(" ",i,WHITE);
   }
 
-  printj("\n                Version 0.3.03\n");
-  printj("================[System Ready]================\n");
-  char* linein;
-  while(true)
-  {
-      putch('>');
-      linein = keyboard_readline();
-      if(str_eq(get_split(linein, ' ', 1), (char*)"forth"))
-      {
-          forth();
-          return 1;
-      }
-      else if(str_eq(get_split(linein, ' ', 1), (char*)"halt"))
-      {
-          clrscr();
-          printj("\nIT IS SAFE TO POWER OFF");
-          return 1;
-      }
-      else if(str_eq(get_split(linein, ' ', 1), (char*)"clear"))
-      {
-          clrscr();
-      }
-      else if(str_eq(get_split(linein,' ',1), (char*)"test"))
-      {
-          cprintj("TESTING EXPERIMENTAL FUNCTIONALITY\n", BLACK, RED);
-          printj("NO TEST\n");
-      }
-      else if(str_eq(get_split(linein,' ',1), (char*)"help")
-          || str_eq(get_split(linein, ' ',1),(char*)"h"))
-      {
-          printj("Commands:\n");
-          printj("forth -- launch interactive forth\n");
-          printj("test  -- whatever the current test function is\n");
-          printj("clear -- clear the screen\n");
-          printj("halt  -- stop the OS\n");
-          printj("h/help-- this text, dummy\n");
-      }
-  }
-  
+  printj("\n                Version 0.7.0");
+  printj("\n================[System Ready]================\n");
+  forth();
+
+  clrscr();
+  for(int i=0; i < 12; i++) {printj("\n");}
+  printj("                          IT IS NOW SAFE TO POWER DOWN                          ");
+  for(int i=0; i < 12; i++) {printj("\n");}
   return 1;
 }
