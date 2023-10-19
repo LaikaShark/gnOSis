@@ -29,7 +29,7 @@ typedef unsigned char byte;
 #define STACK_POSITION (STATE_POSITION + CELL_SIZE)
 #define RSTACK_POSITION (STACK_POSITION + STACK_SIZE * CELL_SIZE)
 #define HERE_START (RSTACK_POSITION + RSTACK_SIZE * CELL_SIZE)
-#define MAX_BUILTIN_ID 75
+#define MAX_BUILTIN_ID 77
 
 //FLAGS AND MASK
 #define FLAG_IMMEDIATE 0x80
@@ -152,6 +152,7 @@ const char *initScript =
 ": D0= OR 0= ;\n"
 ": DMIN 2OVER 2OVER D< IF 2DROP ELSE 2NIP THEN ;\n"
 ": DMAX 2OVER 2OVER D> IF 2DROP ELSE 2NIP THEN ;\n"
+": SLEEP TIME + BEGIN PAUSE DUP TIME = UNTIL ;\n"
 ;
 
 /////////////////////////////////////////////////////////////////////
@@ -990,6 +991,20 @@ BUILTIN( 74, "KEY", key, 0)
   push(c);
 }
 
+BUILTIN( 75, "TIME", time, 0)
+{
+  unsigned long long t = get_timer();
+  push(t);
+}
+
+BUILTIN( 76, "PAUSE", pause, 0)
+{
+  unsigned long long t = get_timer();
+  do
+  {}
+  while(t+1 != get_timer());
+}
+
 
 /*******************************************************************************
 *
@@ -1161,6 +1176,8 @@ int forth()
     ADD_BUILTIN(cemit);
     ADD_BUILTIN(test);
     ADD_BUILTIN(buffkey);
+    ADD_BUILTIN(time);
+    ADD_BUILTIN(pause);
 
     maxBuiltinAddress = (*here) - 1;
 

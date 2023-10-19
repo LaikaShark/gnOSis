@@ -3,6 +3,11 @@
 // The Timer Tick
 unsigned long long tick = 0;
 
+unsigned long long get_timer()
+{
+  return tick;
+}
+
 //Prints the time
 void timer_callback(registers_t regs)
 {
@@ -50,7 +55,7 @@ void init_timer(u32int freq)
     cprintj("DISABLED\n",RED,WHITE);
 	return;
   }
- // Raise the Interrupt to Initialise the Clock
+  // Raise the Interrupt to Initialise the Clock
   asm volatile("sti");
 
   // Register our Timer , with the address of the fuction to be called when
