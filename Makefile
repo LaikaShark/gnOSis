@@ -12,7 +12,6 @@ CXXFILES := $(wildcard *.cc kernel/*.cc kernel/core/*.cc kernel/module/*.cc)
 CXXOBJECTS := $(CXXFILES:.cc=.o)
 CXXHEADERS := $(wildcard *.h kernel/include/*.h)
 DEPENDS := $(CXXFILES:.cc=.d)
-PRECOMP := $(wildcard kernel/include/*.h.gch)
 
 #linking
 LD := ld
@@ -27,8 +26,8 @@ gnOSis.bin: $(ASOBJECTS) $(CXXOBJECTS)
 	$(LD) $(LDFLAGS) -o build/$@ $^
 
 #run the kernel
-run: gnOSis.bin
-	qemu-system-i386 -kernel 'build/gnOSis.bin' 
+run: build/gnOSis.bin
+	@qemu-system-i386 -kernel 'build/gnOSis.bin' 
 
 #Assembly -> object files
 %.s.o: %.s
@@ -42,9 +41,10 @@ run: gnOSis.bin
 %.d: %.cc
 	$(CXX) -MM -MD -I./kernel/include -o $@ $<
 
-#include generated files
--include $(DEPENDS)
 
 #Throw it all in the bin
-clean: $(ASOBJECTS) $(CXXOBJECTS) $(DEPENDS) $(PRECOMP)
-	$(RM) -f $^
+clean: 
+	@rm -f $(ASOBJECTS)
+	@rm -f $(CXXOBJECTS)
+	@rm -f $(DEPENDS)
+
