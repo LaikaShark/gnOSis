@@ -7,6 +7,12 @@ void io::outb(u16int port, u8int value)
 	asm volatile ("outb %1, %0" : : "dN" (port), "a" (value));
 }
 
+//write word to port
+void io::outw(u16int port, u16int value)
+{
+	asm volatile ("outw %1, %0" : : "dN" (port), "a" (value));
+}
+
 //read byte from port
 u8int io::inb(u16int port)
 {

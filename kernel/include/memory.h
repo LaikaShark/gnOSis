@@ -4,7 +4,7 @@
 #include <system.h>
 
 //Copy set no of bytes from src to dest
-void *memcopy(void *dest, const void *src, int count);
+void *memcpy(void *dest, const void *src, int count);
 
 //Set 'count' bytes in 'dest' to 'val'.*/
 void *memset(void *dest, char val, int count);

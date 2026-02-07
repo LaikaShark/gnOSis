@@ -25,9 +25,12 @@ all: gnOSis.bin
 gnOSis.bin: $(ASOBJECTS) $(CXXOBJECTS)
 	$(LD) $(LDFLAGS) -o build/$@ $^
 
+build/disk.img:
+	dd if=/dev/zero of=build/disk.img bs=512 count=4096
+
 #run the kernel
-run: build/gnOSis.bin
-	@qemu-system-i386 -kernel 'build/gnOSis.bin' 
+run: build/gnOSis.bin build/disk.img
+	@qemu-system-i386 -kernel 'build/gnOSis.bin' -hda build/disk.img
 
 #Assembly -> object files
 %.s.o: %.s

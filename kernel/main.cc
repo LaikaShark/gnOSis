@@ -19,6 +19,8 @@ int kmain(struct multiboot *mboot_ptr)
   // All device Intialisations Go Here
   init_keyboard_driver();
   init_timer(1); //disable unused timer
+  init_ata();
+  fs_init();
   printj("Color test:");
   for(int i=0; i < 16; i++)
   {

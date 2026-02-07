@@ -29,7 +29,7 @@ typedef unsigned char byte;
 #define STACK_POSITION (STATE_POSITION + CELL_SIZE)
 #define RSTACK_POSITION (STACK_POSITION + STACK_SIZE * CELL_SIZE)
 #define HERE_START (RSTACK_POSITION + RSTACK_SIZE * CELL_SIZE)
-#define MAX_BUILTIN_ID 77
+#define MAX_BUILTIN_ID 88
 
 //FLAGS AND MASK
 #define FLAG_IMMEDIATE 0x80
@@ -143,7 +143,14 @@ const char *initScript =
 ": .S DSP@ BEGIN DUP S0@ > WHILE DUP ? CELL - REPEAT DROP ;\n"
 ": TYPE 0 DO DUP C@ EMIT 1 + LOOP DROP ;\n"
 ": ALIGN BEGIN HERE @ CELL MOD WHILE 0 C, REPEAT ;\n"
-": s\" ' LITSTRING , HERE @ 0 , BEGIN BUFFKEY DUP 34 <> WHILE C, REPEAT DROP DUP HERE @ SWAP - CELL - SWAP ! ALIGN ; IMMEDIATE\n"
+": s\" STATE @ IF\n"
+"' LITSTRING , HERE @ 0 ,\n"
+"BEGIN BUFFKEY DUP 34 <> WHILE C, REPEAT DROP\n"
+"DUP HERE @ SWAP - CELL - SWAP ! ALIGN\n"
+"ELSE HERE @\n"
+"BEGIN BUFFKEY DUP 34 <> WHILE C, REPEAT DROP\n"
+"HERE @ OVER - OVER HERE !\n"
+"THEN ; IMMEDIATE\n"
 ": .\" [COMPILE] s\" ' TYPE , ; IMMEDIATE\n"
 ": ( BEGIN BUFFKEY [CHAR] ) = UNTIL ; IMMEDIATE\n"
 ": COUNT DUP 1+ SWAP C@ ;\n"
@@ -153,6 +160,9 @@ const char *initScript =
 ": DMIN 2OVER 2OVER D< IF 2DROP ELSE 2NIP THEN ;\n"
 ": DMAX 2OVER 2OVER D> IF 2DROP ELSE 2NIP THEN ;\n"
 ": SLEEP TIME + BEGIN PAUSE DUP TIME = UNTIL ;\n"
+": R/O 1 ;\n"
+": W/O 2 ;\n"
+": R/W 3 ;\n"
 ;
 
 /////////////////////////////////////////////////////////////////////
@@ -1005,6 +1015,119 @@ BUILTIN( 76, "PAUSE", pause, 0)
   while(t+1 != get_timer());
 }
 
+// File I/O builtins
+
+// ( c-addr u fam -- fileid ior )
+BUILTIN(77, "OPEN-FILE", open_file, 0)
+{
+    cell mode = pop();
+    cell len = pop();
+    cell addr = pop();
+    char name[20];
+    int nlen = len;
+    if (nlen > 18) nlen = 18;
+    for (int i = 0; i < nlen; i++)
+        name[i] = memory[addr + i];
+    name[nlen] = '\0';
+    int fd = fs_open(name, nlen, mode);
+    if (fd >= 0) { push(fd); push(0); }
+    else { push(0); push(-1); }
+}
+
+// ( c-addr u fam -- fileid ior )
+BUILTIN(78, "CREATE-FILE", create_file, 0)
+{
+    cell mode = pop();
+    cell len = pop();
+    cell addr = pop();
+    char name[20];
+    int nlen = len;
+    if (nlen > 18) nlen = 18;
+    for (int i = 0; i < nlen; i++)
+        name[i] = memory[addr + i];
+    name[nlen] = '\0';
+    if (fs_create(name, nlen) != 0)
+    {
+        push(0);
+        push(-1);
+        return;
+    }
+    int fd = fs_open(name, nlen, mode);
+    if (fd >= 0) { push(fd); push(0); }
+    else { push(0); push(-1); }
+}
+
+// ( fileid -- ior )
+BUILTIN(79, "CLOSE-FILE", close_file, 0)
+{
+    cell fd = pop();
+    push(fs_close(fd) == 0 ? 0 : -1);
+}
+
+// ( c-addr u1 fileid -- u2 ior )
+BUILTIN(80, "READ-FILE", read_file, 0)
+{
+    cell fd = pop();
+    cell count = pop();
+    cell addr = pop();
+    int result = fs_read(fd, &memory[addr], count);
+    if (result >= 0) { push(result); push(0); }
+    else { push(0); push(-1); }
+}
+
+// ( c-addr u fileid -- ior )
+BUILTIN(81, "WRITE-FILE", write_file, 0)
+{
+    cell fd = pop();
+    cell count = pop();
+    cell addr = pop();
+    int result = fs_write(fd, (const u8int*)&memory[addr], count);
+    push(result >= 0 ? 0 : -1);
+}
+
+// ( c-addr u -- ior )
+BUILTIN(82, "DELETE-FILE", delete_file, 0)
+{
+    cell len = pop();
+    cell addr = pop();
+    char name[20];
+    int nlen = len;
+    if (nlen > 18) nlen = 18;
+    for (int i = 0; i < nlen; i++)
+        name[i] = memory[addr + i];
+    name[nlen] = '\0';
+    push(fs_delete(name, nlen) == 0 ? 0 : -1);
+}
+
+// ( fileid -- ud ior )
+BUILTIN(83, "FILE-SIZE", file_size, 0)
+{
+    cell fd = pop();
+    u32int sz = fs_filesize(fd);
+    // Push as double-cell (low then high)
+    push((cell)(sz & 0xFFFF));
+    push((cell)((sz >> 16) & 0xFFFF));
+    push(0);
+}
+
+// ( -- )
+BUILTIN(84, "FILE-LIST", file_list, 0)
+{
+    fs_list();
+}
+
+// ( -- ior )
+BUILTIN(85, "FORMAT-DISK", format_disk, 0)
+{
+    push(fs_format() == 0 ? 0 : -1);
+}
+
+// ( -- )
+BUILTIN(86, "FLUSH", fs_flush_word, 0)
+{
+    fs_flush();
+}
+
 
 /*******************************************************************************
 *
@@ -1178,6 +1301,16 @@ int forth()
     ADD_BUILTIN(buffkey);
     ADD_BUILTIN(time);
     ADD_BUILTIN(pause);
+    ADD_BUILTIN(open_file);
+    ADD_BUILTIN(create_file);
+    ADD_BUILTIN(close_file);
+    ADD_BUILTIN(read_file);
+    ADD_BUILTIN(write_file);
+    ADD_BUILTIN(delete_file);
+    ADD_BUILTIN(file_size);
+    ADD_BUILTIN(file_list);
+    ADD_BUILTIN(format_disk);
+    ADD_BUILTIN(fs_flush_word);
 
     maxBuiltinAddress = (*here) - 1;
 
