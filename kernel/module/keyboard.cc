@@ -29,19 +29,19 @@ keymap_t us =
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // F1 to F10 - 59 to 68
     0, //Num lock - 69
     0, //Scroll lock - 70
-    0, //Home - 71
-    0, //Up arrow - 72
-    0, //Page up - 73
+    KEY_HOME, //Home - 71
+    KEY_UP, //Up arrow - 72
+    KEY_PGUP, //Page up - 73
     '-',
-    0, //Left arrow - 75
+    KEY_LEFT, //Left arrow - 75
     0,
-    0, //Right arrow -77
+    KEY_RIGHT, //Right arrow - 77
     '+',
-    0, //End - 79
-    0, //Dowm arrow - 80
-    0, //Page down - 81
+    KEY_END, //End - 79
+    KEY_DOWN, //Down arrow - 80
+    KEY_PGDN, //Page down - 81
     0, //Insert - 82
-    0, //Delete - 83
+    KEY_DELETE, //Delete - 83
     0, 0, 0,
     0, //F11 - 87
     0, //F12 - 88
@@ -71,19 +71,19 @@ keymap_t us =
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // F1 to F10 - 59 to 68
     0, //Num lock - 69
     0, //Scroll lock - 70
-    0, //Home - 71
-    0, //Up arrow - 72
-    0, //Page up - 73
+    KEY_HOME, //Home - 71
+    KEY_UP, //Up arrow - 72
+    KEY_PGUP, //Page up - 73
     '-',
-    0, //Left arrow - 75
+    KEY_LEFT, //Left arrow - 75
     0,
-    0, //Right arrow -77
+    KEY_RIGHT, //Right arrow - 77
     '+',
-    0, //End - 79
-    0, //Dowm arrow - 80
-    0, //Page down - 81
+    KEY_END, //End - 79
+    KEY_DOWN, //Down arrow - 80
+    KEY_PGDN, //Page down - 81
     0, //Insert - 82
-    0, //Delete - 83
+    KEY_DELETE, //Delete - 83
     0, 0, 0,
     0, //F11 - 87
     0, //F12 - 88
@@ -192,7 +192,10 @@ void keyboard_handler(registers_t regs)
       // Avoid buffer overruns if possible.
       if (keyboard_buffer_end != keyboard_buffer_start-1)
         {
-          keyboard_buffer[keyboard_buffer_end++] = scancodes[scancode];
+          u8int ch = scancodes[scancode];
+          if ((current_layout->controls & CONTROL) && ch >= 'a' && ch <= 'z')
+              ch = ch - 'a' + 1;
+          keyboard_buffer[keyboard_buffer_end++] = ch;
           keyboard_buffer_end &= 255;
         }
     }

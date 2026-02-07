@@ -29,7 +29,7 @@ typedef unsigned char byte;
 #define STACK_POSITION (STATE_POSITION + CELL_SIZE)
 #define RSTACK_POSITION (STACK_POSITION + STACK_SIZE * CELL_SIZE)
 #define HERE_START (RSTACK_POSITION + RSTACK_SIZE * CELL_SIZE)
-#define MAX_BUILTIN_ID 88
+#define MAX_BUILTIN_ID 89
 
 //FLAGS AND MASK
 #define FLAG_IMMEDIATE 0x80
@@ -71,6 +71,9 @@ builtin builtins[MAX_BUILTIN_ID] = { 0 };
 
 //bunch of builtins that aren't quite primitives
 char *initscript_pos;
+//Script execution buffer
+char script_buf[4096];
+char *script_pos;
 const char *initScript =
 ": DECIMAL 10 BASE ! ;\n"
 ": HEX 16 BASE ! ;\n"
@@ -163,6 +166,8 @@ const char *initScript =
 ": R/O 1 ;\n"
 ": W/O 2 ;\n"
 ": R/W 3 ;\n"
+": ED WORD EDIT ;\n"
+": INCLUDE WORD INCLUDED ;\n"
 ;
 
 /////////////////////////////////////////////////////////////////////
@@ -175,6 +180,7 @@ int llkey()
 {
   int c;
   if(*initscript_pos) return *(initscript_pos)++;
+  if(script_pos && *script_pos) return *(script_pos)++;
   do
   {
     c = keyboard_getchar();
@@ -1128,6 +1134,50 @@ BUILTIN(86, "FLUSH", fs_flush_word, 0)
     fs_flush();
 }
 
+// ( c-addr u -- )
+BUILTIN(87, "EDIT", edit_file, 0)
+{
+    cell len = pop();
+    cell addr = pop();
+    char name[20];
+    int nlen = len;
+    if (nlen > 18) nlen = 18;
+    for (int i = 0; i < nlen; i++)
+        name[i] = memory[addr + i];
+    name[nlen] = '\0';
+    editor_open(name, nlen);
+}
+
+// ( c-addr u -- )
+BUILTIN(88, "INCLUDED", included_file, 0)
+{
+    cell len = pop();
+    cell addr = pop();
+    char name[20];
+    int nlen = len;
+    if (nlen > 18) nlen = 18;
+    for (int i = 0; i < nlen; i++)
+        name[i] = memory[addr + i];
+    name[nlen] = '\0';
+    int fd = fs_open(name, nlen, FS_MODE_READ);
+    if (fd < 0)
+    {
+        tell("File not found: ", LIGHT_RED);
+        tell(name);
+        putch('\n');
+        errorFlag = 1;
+        return;
+    }
+    int nread = fs_read(fd, (u8int*)script_buf, sizeof(script_buf) - 2);
+    fs_close(fd);
+    if (nread < 0) nread = 0;
+    // Ensure script ends with a newline so the last word is parsed
+    if (nread > 0 && script_buf[nread - 1] != '\n')
+        script_buf[nread++] = '\n';
+    script_buf[nread] = '\0';
+    script_pos = script_buf;
+}
+
 
 /*******************************************************************************
 *
@@ -1311,12 +1361,15 @@ int forth()
     ADD_BUILTIN(file_list);
     ADD_BUILTIN(format_disk);
     ADD_BUILTIN(fs_flush_word);
+    ADD_BUILTIN(edit_file);
+    ADD_BUILTIN(included_file);
 
     maxBuiltinAddress = (*here) - 1;
 
     if (errorFlag) return 1;
 
     initscript_pos = (char*)initScript;
+    script_pos = 0;
     quit();
     return 0;
 }

@@ -22,5 +22,6 @@ typedef          char  s8int;
 #include "string.h"
 #include "ata.h"
 #include "fs.h"
+#include "editor.h"
 #include "forth.h"
 #endif
