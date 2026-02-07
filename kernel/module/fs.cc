@@ -7,11 +7,11 @@ static fs_openfile open_files[FS_MAX_OPEN];
 static u8int sector_buf[FS_SECTOR_SIZE];
 static int fs_ready = 0;
 
-// Write directory sectors (1-2) to disk
+// Write directory sectors to disk
 static void flush_directory()
 {
-    ata_write_sector(FS_DIR_SECTOR_START, (const u8int*)&directory[0]);
-    ata_write_sector(FS_DIR_SECTOR_START + 1, (const u8int*)&directory[16]);
+    for (int i = 0; i < FS_DIR_SECTOR_COUNT; i++)
+        ata_write_sector(FS_DIR_SECTOR_START + i, (const u8int*)&directory[i * 16]);
 }
 
 // Write bitmap sector (3) to disk
@@ -122,8 +122,8 @@ void fs_init()
     }
 
     // Load directory
-    ata_read_sector(FS_DIR_SECTOR_START, (u8int*)&directory[0]);
-    ata_read_sector(FS_DIR_SECTOR_START + 1, (u8int*)&directory[16]);
+    for (int i = 0; i < FS_DIR_SECTOR_COUNT; i++)
+        ata_read_sector(FS_DIR_SECTOR_START + i, (u8int*)&directory[i * 16]);
 
     // Load bitmap
     ata_read_sector(FS_BITMAP_SECTOR, bitmap);
@@ -147,12 +147,10 @@ int fs_format()
     memset((char*)directory, 0, sizeof(directory));
     flush_directory();
 
-    // Clear bitmap, mark sectors 0-3 as used
+    // Clear bitmap, mark metadata sectors as used
     memset((char*)bitmap, 0, FS_SECTOR_SIZE);
-    bitmap_set(0); // superblock
-    bitmap_set(1); // dir 1
-    bitmap_set(2); // dir 2
-    bitmap_set(3); // bitmap
+    for (u32int i = 0; i < FS_DATA_START; i++)
+        bitmap_set(i);
     flush_bitmap();
 
     // Clear open file table

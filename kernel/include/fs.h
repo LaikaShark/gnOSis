@@ -8,14 +8,14 @@
 #define FS_TOTAL_SECTORS 4096
 #define FS_SECTOR_SIZE  512
 
-// Layout: sector 0 = superblock, 1-2 = directory, 3 = bitmap, 4+ = data
+// Layout: sector 0 = superblock, 1-16 = directory, 17 = bitmap, 18+ = data
 #define FS_SUPERBLOCK_SECTOR 0
 #define FS_DIR_SECTOR_START  1
-#define FS_DIR_SECTOR_COUNT  2
-#define FS_BITMAP_SECTOR     3
-#define FS_DATA_START        4
+#define FS_DIR_SECTOR_COUNT  16
+#define FS_BITMAP_SECTOR     17
+#define FS_DATA_START        18
 
-#define FS_MAX_FILES     32
+#define FS_MAX_FILES     256
 #define FS_MAX_NAME      18
 #define FS_MAX_OPEN      4
 
