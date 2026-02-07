@@ -27,7 +27,7 @@ int kmain(struct multiboot *mboot_ptr)
     cprintj(" ",i,WHITE);
   }
 
-  printj("\n                Version 0.7.0");
+  printj("\n                Version 1.0.0");
   printj("\n================[System Ready]================\n");
   forth();
 

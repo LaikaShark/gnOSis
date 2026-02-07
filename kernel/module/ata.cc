@@ -68,7 +68,7 @@ static int ata_identify()
 
 void init_ata()
 {
-    printj("Initializing ATA......");
+    printj("Initializing ATA........");
     if (ata_identify() == 0)
     {
         ata_present = 1;
